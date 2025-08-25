@@ -84,7 +84,7 @@ if __name__ == '__main__':
     for n_noise in range(max_n_noise + 1):
         print(f'Testing with {n_noise} noise nodes')
 
-        accuracy_mean, hits_mean, accuracy_slow_mean, hits_slow_mean = test_algorithm(initial_graph, n_noise=n_noise, n_tests=1)
+        accuracy_mean, hits_mean, accuracy_slow_mean, hits_slow_mean = test_algorithm(initial_graph, n_noise=n_noise, n_tests=20)
 
         accuracy_history.append(accuracy_mean)
         hits_history.append(hits_mean)

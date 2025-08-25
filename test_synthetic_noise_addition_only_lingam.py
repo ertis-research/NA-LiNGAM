@@ -23,4 +23,4 @@ functions_list = [
    'LiNGAMAlgorithm'
 ]
 
-test_synthetic_graph_generation(3, functions_list, iterations=100, folder='results_lingam_20_noise_100_iter')
+test_synthetic_graph_generation(3, functions_list, iterations=20, folder='results_lingam_20_noise_20_iter')

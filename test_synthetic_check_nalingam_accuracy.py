@@ -70,7 +70,7 @@ def test_algorithm(syn_graph, n_tests=10, starting_nodes=3):
 
 if __name__ == '__main__':
     dataset_size = 1000
-    n_tests = 1
+    n_tests = 20
     nodes = 20
     starting_nodes = 3
 

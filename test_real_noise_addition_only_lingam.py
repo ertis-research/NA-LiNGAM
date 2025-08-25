@@ -23,4 +23,4 @@ functions_list = [
    'LiNGAMAlgorithm'
 ]
 
-test_real_graph_generation(initial_graph, functions_list, iterations=20, folder='results_lingam_20_noise_50_iter')
+test_real_graph_generation(initial_graph, functions_list, iterations=20, folder='results_lingam_20_noise_20_iter')
