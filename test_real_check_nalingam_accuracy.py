@@ -2,7 +2,7 @@
 ################## IMPORT LIBRARIES ####################
 ########################################################
 
-from utils.environment import GraphEnvLiNGAM
+from utils.nalingam_environment import GraphEnvNALiNGAM
 from utils.generate_real_data_graph import RealDataSachs
 from utils.graph_functions import get_initial_subgraph
 
@@ -38,7 +38,7 @@ def test_algorithm(initial_graph, n_noise, n_tests=10):
     for _ in range(n_tests):
         dataset = RealDataSachs(n_noise=n_noise)
         df = dataset.get_dataframe()
-        env = GraphEnvLiNGAM(df, initial_graph)
+        env = GraphEnvNALiNGAM(df, initial_graph)
 
         real_graph = dataset.get_graph()
         real_nodes = list(real_graph.nodes)

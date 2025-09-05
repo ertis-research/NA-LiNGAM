@@ -34,8 +34,10 @@ class RealDataSachs:
             self.dataframe = self.dataframe[(self.dataframe[col] >= mean - std) & (self.dataframe[col] <= mean + std)]
         self.dataframe = self.dataframe.reset_index(drop=True)
 
+        self.real_nodes = list(self.dataframe.columns)
+
         for j in range(n_noise):
-            random_variable = random.choice(self.dataframe.columns)
+            # random_variable = random.choice(self.dataframe.columns)
             self.dataframe[f'Noise_{j}'] =  np.sin(2 * np.pi * np.arange(len(self.dataframe)) / 50) + np.random.normal(0, 0.1, len(self.dataframe))
 
         scaler = StandardScaler()
@@ -61,7 +63,7 @@ class RealDataSachs:
         ]
 
         self.graph = nx.DiGraph()
-        self.graph.add_nodes_from(self.dataframe.columns)
+        self.graph.add_nodes_from(self.real_nodes)
         self.graph.add_edges_from(real_edges)
 
     def get_nodes(self):

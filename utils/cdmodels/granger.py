@@ -3,10 +3,8 @@
 ##############################################
 
 from causallearn.search.Granger.Granger import Granger
-from causallearn.utils.GraphUtils import GraphUtils
 import networkx as nx
 import numpy as np
-import pydotplus
 
 ##############################################
 ############## CLASS DEFINITION ##############
@@ -45,26 +43,3 @@ class GrangerAlgorithm():
 
     def get_graph(self):
         return self.graph
-
-if __name__ == '__main__':
-    data = np.random.rand(100, 5)
-    variables = ['A', 'B', 'C', 'D', 'E']
-
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    import matplotlib.image as mpimg
-    import io
-    dataframe = pd.DataFrame(data, columns=variables)
-
-    pc = GrangerAlgorithm(dataframe, variables)
-    print(pc.get_nodes())
-    print(pc.get_edges())
-    print(pc.get_graph())
-
-    # pyd = GraphUtils.to_pydot(pc.algorithm_graph)
-    # tmp_png = pyd.create_png(f="png")
-    # fp = io.BytesIO(tmp_png)
-    # img = mpimg.imread(fp, format='png')
-    # plt.axis('off')
-    # plt.imshow(img)
-    # plt.savefig('test_algorithm_graph.png')

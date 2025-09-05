@@ -23,7 +23,7 @@ from scipy.stats import pearsonr
 ############## CLASS DEFINITION ##############
 ##############################################
 
-class NALiNGAMAlgorithm():
+class NALiNGAMScoreAlgorithm():
     """
     Validation algorithm for LiNGAM graph.
     params:
@@ -214,20 +214,20 @@ class NALiNGAMAlgorithm():
                 score = ((1 - reg_score) + (1 - perm_score)) * (boots_score / 2)
                 sample_score += score
 
-            total_new_edges = 0
-            prob_score = 0
+            n_miss_edges = 0
+            score_miss = 0
             for (x, y) in results_bootstrap.keys():
                 if (x, y) not in results_regression.keys():
                     if not self.has_relations(x) or not self.has_relations(y):
                         if show: print(f"Edge: {x} -> {y}: Boots: {results_bootstrap[(x, y)]} BAD EDGE")
-                        prob_score += 10
+                        score_miss += 10
                     else:
                         if show: print(f"Edge: {x} -> {y}: Boots: {results_bootstrap[(x, y)]}")
-                        prob_score += results_bootstrap[(x, y)]
-                    total_new_edges += 1
-            if total_new_edges > 0:
-                prob_score = prob_score / total_new_edges
-            sample_score -= prob_score
+                        score_miss += results_bootstrap[(x, y)]
+                    n_miss_edges += 1
+            if n_miss_edges > 0:
+                score_miss = score_miss / n_miss_edges
+            sample_score -= score_miss
 
             total_score += sample_score
 

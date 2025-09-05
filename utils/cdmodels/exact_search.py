@@ -3,10 +3,8 @@
 ##############################################
 
 from causallearn.search.ScoreBased.ExactSearch import bic_exact_search
-from causallearn.utils.GraphUtils import GraphUtils
 import networkx as nx
 import numpy as np
-import pydotplus
 
 ##############################################
 ############## CLASS DEFINITION ##############
@@ -54,15 +52,3 @@ class ExactSearchAlgorithm():
 
     def get_graph(self):
         return self.graph
-
-if __name__ == '__main__':
-    data = np.random.rand(100, 5)
-    variables = ['A', 'B', 'C', 'D', 'E']
-
-    import pandas as pd
-    dataframe = pd.DataFrame(data, columns=variables)
-
-    pc = ExactSearchAlgorithm(dataframe, variables)
-    print(pc.get_nodes())
-    print(pc.get_edges())
-    print(pc.get_graph())

@@ -2,7 +2,7 @@
 ############## IMPORT LIBRARIES ##############
 ##############################################
 
-from .na_lingam import NALiNGAMAlgorithm
+from .nalingam_score import NALiNGAMScoreAlgorithm
 
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ import concurrent.futures
 ############## CLASS DEFINITION ##############
 ##############################################
 
-class GraphEnvLiNGAM:
+class GraphEnvNALiNGAM:
     def __init__(self, data, initial_graph):
         """
         Entorno para el problema de composición de grafo LiNGAM.
@@ -67,7 +67,7 @@ class GraphEnvLiNGAM:
         best_score = -np.inf
 
         for _ in range(iterations):
-            self.lingam = NALiNGAMAlgorithm(self.data, self.init_vars + selected_features)
+            self.lingam = NALiNGAMScoreAlgorithm(self.data, self.init_vars + selected_features)
             score = self.lingam.get_score(num_iter=1)
 
             if score > best_score:
@@ -104,7 +104,7 @@ class GraphEnvLiNGAM:
         """
         selected_features = [feature for feature, mask in zip(self.new_features, state) if mask == 1]
         
-        lingam = NALiNGAMAlgorithm(self.data, self.init_vars + selected_features)
+        lingam = NALiNGAMScoreAlgorithm(self.data, self.init_vars + selected_features)
 
         score = lingam.get_score(num_iter=num_iter, show=show)
 

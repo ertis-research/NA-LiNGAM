@@ -2,7 +2,10 @@
 ################## IMPORT LIBRARIES ####################
 ########################################################
 
-from utils.environment import GraphEnvLiNGAM
+import sys
+sys.path.append('../')
+
+from utils.nalingam_environment import GraphEnvNALiNGAM
 from utils.generate_synthetic_graph import SyntheticGraphGenerator
 from utils.graph_functions import get_initial_subgraph
 
@@ -27,7 +30,7 @@ def test_algorithm(syn_graph, n_tests=10, starting_nodes=2):
         initial_graph = get_initial_subgraph(syn_graph.get_graph(), initial_variables)
 
         dataset = syn_graph.get_dataframe()
-        env = GraphEnvLiNGAM(dataset, initial_graph)
+        env = GraphEnvNALiNGAM(dataset, initial_graph)
 
         # Get the state of the environment using only real variables
         optimal_state = np.zeros(len(env.new_features))
