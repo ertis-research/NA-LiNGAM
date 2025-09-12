@@ -20,10 +20,11 @@ import concurrent.futures
 class GraphEnvNALiNGAM:
     def __init__(self, data, initial_graph):
         """
-        Entorno para el problema de composición de grafo LiNGAM.
-        params:
-            data: DataFrame con los datos.
-            initial_graph: Grafo inicial original del problema.
+        Environment for the NALiNGAM algorithm.
+
+        Parameters:
+        - data (pd.DataFrame): The dataset to be used.
+        - initial_graph (nx.DiGraph): The initial graph structure.
         """
         self.data = data
         self.initial_graph = initial_graph
@@ -43,24 +44,29 @@ class GraphEnvNALiNGAM:
 
     def get_initial_state(self):
         """
-        Given the initial state of the environment.
-        return:
-            initial_state: Initial state.
+        Returns the initial state of the environment.
         """
         return self.initial_state
     
     def get_possible_states(self):
         """
-        Obtiene todos los posibles estados del entorno.
-        return:
-            states: Lista con los posibles estados.
-        """
+        Returns all possible states of the environment."""
         states = []
         for i in range(2**len(self.initial_state)):
             states.append([int(x) for x in list(bin(i)[2:].zfill(len(self.initial_state)))])
         return states
     
     def get_graph(self, state, iterations=10):
+        """
+        Returns the graph corresponding to the given state.
+
+        Parameters:
+        - state (list): The state to be evaluated.
+        - iterations (int): Number of iterations to run the NALiNGAM algorithm.
+
+        Returns:
+        - graph (nx.DiGraph): The resulting graph.
+        """
         selected_features = [feature for feature, mask in zip(self.new_features, state) if mask == 1]
 
         selected_lingam = None
@@ -95,12 +101,15 @@ class GraphEnvNALiNGAM:
 
     def get_score(self, state, num_iter=None, show=False):
         """
-        Get the score of the given state by parameters.
-        params:
-            state: State to evaluate.
-            show: Boolean to show the graph scores.
-        return:
-            score: State score.
+        Returns the score of the given state.
+
+        Parameters:
+        - state (list): The state to be evaluated.
+        - num_iter (int): Number of iterations to run the NALiNGAM algorithm
+        - show (bool): Whether to print the score.
+
+        Returns:
+        - score (float): The score of the state.
         """
         selected_features = [feature for feature, mask in zip(self.new_features, state) if mask == 1]
         
@@ -112,10 +121,15 @@ class GraphEnvNALiNGAM:
     
     def get_best_state_fast(self, num_iter = None, show=False):
         """
-        Get the best state and its score quickly.
-        return:
-            state: Best state.
-            score: Best state score.
+        Returns the best state found using a fast search strategy.
+
+        Parameters:
+        - num_iter (int): Number of iterations to run the NALiNGAM algorithm
+        - show (bool): Whether to print the score.
+
+        Returns:
+        - best_state (list): The best state found.
+        - best_score (float): The score of the best state.
         """
         initial_states = []
         initial_score = self.get_score(self.initial_state, num_iter=num_iter)
@@ -151,6 +165,16 @@ class GraphEnvNALiNGAM:
         return state, self.get_score(state, show=show)
     
     def get_best_state(self, num_iter=None):
+        """
+        Returns the best state found using a complete search strategy.
+
+        Parameters:
+        - num_iter (int): Number of iterations to run the NALiNGAM algorithm
+
+        Returns:
+        - best_state (list): The best state found.
+        - best_score (float): The score of the best state.
+        """
         states = self.get_possible_states()
         best_state = None
         best_score = - np.inf
@@ -169,23 +193,3 @@ class GraphEnvNALiNGAM:
                 best_state[self.new_features.index(node)] = 0
 
         return best_state, self.get_score(best_state)
-
-    # def get_state_score(self):
-    #     """
-    #     Get the best state and its score.
-    #     params:
-    #         fast: Boolean to get the best state quickly.
-    #     return:
-    #         state: Best state.
-    #         score: Best state score.
-    #     """
-    #     states = self.get_possible_states()
-    #     best_state = None
-    #     best_score = - np.inf
-
-    #     with concurrent.futures.ProcessPoolExecutor() as executor:
-    #         results = executor.map(self.get_score, states)
-
-    #     best_state, best_score = max(zip(states, results), key=lambda x: x[1])
-
-    #     return best_state, best_score

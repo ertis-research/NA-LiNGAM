@@ -5,7 +5,6 @@
 from causallearn.search.PermutationBased.BOSS import boss
 import networkx as nx
 import numpy as np
-import pydotplus
 
 ##############################################
 ############## CLASS DEFINITION ##############
@@ -17,7 +16,6 @@ class BOSSAlgorithm():
         self.variables = variables
 
         initial_graph = boss(self.data)
-        # self.algorithm_graph = initial_graph
 
         node_list = []
         for node in initial_graph.nodes:

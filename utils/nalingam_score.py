@@ -24,13 +24,15 @@ from scipy.stats import pearsonr
 ##############################################
 
 class NALiNGAMScoreAlgorithm():
-    """
-    Validation algorithm for LiNGAM graph.
-    params:
-        data: DataFrame with the data.
-        variables: List with the variables to consider.
-    """
+    
     def __init__(self, data, variables):
+        """
+        Initializes the NALiNGAMScoreAlgorithm with the given data and variables.
+
+        Parameters:
+        - data (pd.DataFrame): The dataset to be used.
+        - variables (list): List of variable names to be considered in the model.
+        """
         self.data = data
         self.variables = variables
 
@@ -51,10 +53,12 @@ class NALiNGAMScoreAlgorithm():
 
     def validate_edges_regression(self):
         """
-        Validate the edges of the LiNGAM graph using conditional regression.
-        return:
-            results: Dictionary with the p-values of each edge.
+        Validates the edges of the LiNGAM graph using regression analysis.
+
+        Returns:
+        - results (dict): A dictionary with edges as keys and their corresponding p-values as values
         """
+        
         data = self.data[self.variables]
         results = {}
         for i, j in zip(*np.where(self.model.adjacency_matrix_ != 0)):  # Solo donde hay aristas
@@ -75,12 +79,15 @@ class NALiNGAMScoreAlgorithm():
 
     def validate_edges_permutation(self, num_permutations=10):
         """
-        Validate the edges of the LiNGAM graph comparing the observed relationship with a null distribution based on random permutations.
-        params:
-            num_permutations: Number of permutations to perform.
-        return:
-            results: Dictionary with the p-values of each edge.
+        Validates the edges of the LiNGAM graph using permutation testing.
+
+        Parameters:
+        - num_permutations (int): Number of permutations to perform for the test.
+
+        Returns:
+        - results (dict): A dictionary with edges as keys and their corresponding p-values as values
         """
+
         data = self.data[self.variables]
         results = {}
         for i, j in zip(*np.where(self.model.adjacency_matrix_ != 0)):  # Solo donde hay aristas
@@ -107,12 +114,15 @@ class NALiNGAMScoreAlgorithm():
 
     def validate_edges_bootstrap(self, num_samples=10):
         """
-        Validate the edges of the LiNGAM graph by seeing how many times they appear in different subsets (bootstrapping).
-        params:
-            num_samples: Number of samples to consider.
-        return:
-            results: Dictionary with the probabilities of each edge.
+        Validates the edges of the LiNGAM graph using bootstrap sampling.
+
+        Parameters:
+        - num_samples (int): Number of bootstrap samples to generate.
+
+        Returns:
+        - results (dict): A dictionary with edges as keys and their corresponding bootstrap frequencies as values
         """
+
         data = self.data[self.variables]
         num_vars = data.shape[1]
         adjacency_counts = np.zeros((num_vars, num_vars))  # Matriz para contar apariciones de aristas
@@ -136,39 +146,43 @@ class NALiNGAMScoreAlgorithm():
 
     def has_relations(self, node):
         """
-        Verifies if a node has relationships with other nodes within the graph.
-        params:
-            node: Node to verify.
-        return:
-            True if it has relationships, False otherwise.
+        Checks if a node has any incoming or outgoing edges.
+
+        Parameters:
+        - node (str): The node to be checked.
+
+        Returns:
+        - has_relations (bool): True if the node has any relations, False otherwise.
         """
+        
         return len(list(self.graph.predecessors(node))) > 0 or len(list(self.graph.successors(node))) > 0
 
     def get_nodes(self):
-        """"
-        Get the graph nodes.
-        return:
-            nodes: List of the graph nodes.
         """
+        Returns a list of all nodes in the graph.
+        """
+        
         return list(self.graph.nodes())
         
     def get_edges(self):
-        """"
-        Get the graph edges."
-        return:
-            edges: List of the graph edges.
         """
+        Returns a list of all edges in the graph.
+        """
+        
         return list(self.graph.edges())
 
     def get_graph(self):
-        """"
-        Get the LiNGAM graph.
-        return:
-            graph: LiNGAM graph.
         """
+        Returns the current graph.
+        """
+
         return self.graph
     
     def get_sorted_edges(self):
+        """
+        Returns a sorted list of edges in the graph based on their weights.
+        """
+
         adjacency_matrix = self.model.adjacency_matrix_.T
 
         pondered_edges = {}
@@ -185,13 +199,17 @@ class NALiNGAMScoreAlgorithm():
     ##############################################
 
     def get_score(self, num_iter=None, show=False):
-        """"
-        Get the validation score of the LiNGAM graph.
-        params:
-            num_iter: Number of iterations of the algorithm.
-        return:
-            total_score: Validation score of the LiNGAM graph.
         """
+        Computes the score of the current graph based on edge validation results.
+
+        Parameters:
+        - num_iter (int): Number of iterations to run the validation functions.
+        - show (bool): Whether to print the score.
+
+        Returns:
+        - score (float): The computed score of the graph.
+        """
+        
         if num_iter is None:
             num_iter = 1
 

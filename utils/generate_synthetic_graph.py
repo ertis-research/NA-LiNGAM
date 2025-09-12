@@ -7,6 +7,17 @@ from sklearn.preprocessing import MinMaxScaler
 
 class SyntheticGraphGenerator:
     def __init__(self, sample_size, node_size, min_edges=1, n_noise_nodes=0, max_edges=None, seed=None):
+        """
+        Initializes the SyntheticGraphGenerator with the given parameters.
+
+        Parameters:
+        - sample_size (int): Number of samples per node.
+        - node_size (int): Total number of nodes in the graph.
+        - min_edges (int): Minimum number of incoming edges per node.
+        - n_noise_nodes (int): Number of noise nodes to add.
+        - max_edges (int or None): Maximum number of incoming edges per node. If None, it defaults to node_size - 1.
+        - seed (int or None): Random seed for reproducibility.
+        """
         if n_noise_nodes > node_size:
             raise ValueError("Number of noise nodes must be less than or equal to the number of nodes.")
         if min_edges < 1:
@@ -41,6 +52,12 @@ class SyntheticGraphGenerator:
         self.real_nodes = None
 
     def generate_samples(self, scale_data=False):
+        """
+        Generates the synthetic graph and corresponding data samples using the specified parameters in the initialization.
+
+        Parameters:
+        - scale_data (bool): Whether to scale the data.
+        """
         data_list = []
         noise_nodes = []
         self.adjanecy_matrix = np.zeros((self.node_size, self.node_size))
@@ -97,20 +114,35 @@ class SyntheticGraphGenerator:
         # print("Samples generated.")
 
     def get_nodes(self):
+        """
+        Returns the list of node names in the graph.
+        """
         if self.dataframe is None:
             return None
         return list(self.dataframe.columns)
     
     def get_real_noise_nodes(self):
+        """
+        Returns two lists: one with the names of real nodes and another with the names of noise nodes.
+        """
         return self.real_nodes, self.noise_nodes
     
     def get_edges(self):
+        """
+        Returns the list of edges in the graph.
+        """
         if self.graph is None:
             return None
         return list(self.graph.edges())
     
     def get_dataframe(self):
+        """
+        Returns the dataframe containing the generated samples.
+        """
         return self.dataframe
     
     def get_graph(self):
+        """
+        Returns the graph representation of the synthetic data.
+        """
         return self.graph

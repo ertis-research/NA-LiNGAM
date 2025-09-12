@@ -19,6 +19,18 @@ import json
 import time
 
 def test_algorithm(syn_graph, n_tests=10, starting_nodes=2):
+    """
+    Test the execution time of the NALiNGAM algorithm and its optimized version.
+
+    Parameters:
+    - syn_graph (SyntheticGraphGenerator): The synthetic graph generator instance.
+    - n_tests (int): Number of tests to run for averaging execution time.
+    - starting_nodes (int): Number of initial nodes in the subgraph.
+
+    Returns:
+    - slow_time_mean (float): Average execution time of the standard NALiNGAM
+    - fast_time_mean (float): Average execution time of the optimized NALiNGAM
+    """
     slow_time_mean = 0
     fast_time_mean = 0
 

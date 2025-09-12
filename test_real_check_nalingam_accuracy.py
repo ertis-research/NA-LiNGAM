@@ -15,6 +15,17 @@ import seaborn as sns
 import json
 
 def check_state(state, real_state):
+    """
+    Check the accuracy of the state compared to the real state.
+
+    Parameters:
+    - state (list): The state to be checked.
+    - real_state (list): The real state to compare against.
+
+    Returns:
+    - variable_accuracy (float): The accuracy of the state.
+    - optimal_state_count (int): 1 if the state is optimal, 0 otherwise
+    """
     optimal_state_count = 0
     variable_accuracy = 0
     for i in range(len(state)):
@@ -30,6 +41,20 @@ def check_state(state, real_state):
             
 
 def test_algorithm(initial_graph, n_noise, n_tests=10):
+    """
+    Test the NALiNGAM algorithm on a real dataset.
+
+    Parameters:
+    - initial_graph (networkx.DiGraph): The initial graph to start the search from
+    - n_noise (int): The number of noise nodes to add to the dataset.
+    - n_tests (int): The number of tests to run.
+
+    Returns:
+    - accuracy_mean (float): The mean accuracy of the algorithm over all tests.
+    - hits_mean (float): The mean number of hits of the algorithm over all tests.
+    - accuracy_slow_mean (float): The mean accuracy of the slow version of the algorithm over all tests.
+    - hits_slow_mean (float): The mean number of hits of the slow version of the algorithm over all tests.
+    """
     hits_mean = 0
     accuracy_mean = 0
     hits_slow_mean = 0

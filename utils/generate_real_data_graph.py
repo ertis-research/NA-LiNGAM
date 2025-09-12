@@ -8,6 +8,12 @@ from causallearn.utils.Dataset import load_dataset
 
 class RealDataSachs:
     def __init__(self, n_noise=0):
+        """
+        Creates a real data graph based on the Sachs dataset with optional noise nodes.
+
+        Parameters:
+        - n_noise (int): Number of noise nodes to add to the dataset.
+        """
         data, labels = load_dataset(dataset_name="sachs")
         self.dataframe = pd.DataFrame(data=data,columns=labels)
 
@@ -37,7 +43,6 @@ class RealDataSachs:
         self.real_nodes = list(self.dataframe.columns)
 
         for j in range(n_noise):
-            # random_variable = random.choice(self.dataframe.columns)
             self.dataframe[f'Noise_{j}'] =  np.sin(2 * np.pi * np.arange(len(self.dataframe)) / 50) + np.random.normal(0, 0.1, len(self.dataframe))
 
         scaler = StandardScaler()
@@ -67,13 +72,25 @@ class RealDataSachs:
         self.graph.add_edges_from(real_edges)
 
     def get_nodes(self):
+        """
+        Returns the list of nodes in the graph.
+        """
         return list(self.dataframe.columns)
     
     def get_edges(self):
+        """
+        Returns the list of edges in the real graph.
+        """
         return list(self.graph.edges())
     
     def get_dataframe(self):
+        """
+        Returns the dataframe used to create the graph.
+        """
         return self.dataframe
     
     def get_graph(self):
+        """
+        Returns the real graph created from the dataframe.
+        """
         return self.graph

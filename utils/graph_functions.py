@@ -46,22 +46,58 @@ warnings.filterwarnings("ignore")
 
 def get_initial_subgraph(graph, initial_variables):
     """
-    Returns a subgraph of the initial graph containing only the initial variables.
+    Returns the subgraph of the given graph containing only the initial variables.
+
+    Parameters:
+    - graph (networkx.DiGraph): The original graph.
+    - initial_variables (list): The list of initial variables to include in the subgraph.
+
+    Returns:
+    - networkx.DiGraph: The subgraph containing only the initial variables.
     """
-    subgraph = graph.subgraph(initial_variables).copy()
+    subgraph = nx.DiGraph(nx.subgraph(graph, initial_variables))
     return subgraph
 
 def save_graph_to_json(graph, n_noise, iterations, folder):
+    """
+    Saves a graph to a json file.
+    
+    Parameters:
+    - graph (networkx.DiGraph): The graph to save.
+    - n_noise (int): The number of noise variables to name the file.
+    - iterations (int): The iteration number to name the file.
+    - folder (str): The folder to save the graph in.
+    """
     data = json_graph.node_link_data(graph)
     with open(f'{folder}/graph_noise_{str(n_noise)}_it_{str(iterations)}.json', 'w') as f:
         json.dump(data, f)
 
 def load_graph_from_json(file_path):
+    """
+    Loads a graph from a json file.
+
+    Parameters:
+    - file_path (str): The path to the json file.
+
+    Returns:
+    - networkx.DiGraph: The loaded graph.
+    """
     with open(file_path, 'r') as f:
         data = json.load(f)
     return json_graph.node_link_graph(data)
 
 def is_path(graph, start, end):
+    """
+    Check if there is a path from start to end in the directed graph.
+
+    Parameters:
+    - graph (networkx.DiGraph): The directed graph.
+    - start (node): The starting node.
+    - end (node): The ending node.
+
+    Returns:
+    - bool: True if there is a path from start to end, False otherwise.
+    """
     visited = set()
     stack = [start]
 
@@ -77,6 +113,19 @@ def is_path(graph, start, end):
     return False
 
 def check_graph(graph, real_graph):
+    """
+    Compares two directed graphs and calculates the accuracy of real edges, invented edges, and invented wrong edges.
+
+    Parameters:
+    - graph (networkx.DiGraph): The graph to evaluate.
+    - real_graph (networkx.DiGraph): The ground truth graph.
+
+    Returns:
+    - tuple: A tuple containing three accuracy metrics:
+        - real_edges_accuracy (float): The accuracy of real edges.
+        - invented_edges_accuracy (float): The accuracy of invented edges (edges that are not in the real graph).
+        - invented_wrong_edges_accuracy (float): The accuracy of invented wrong edges (edges with a wrong direction).
+    """
     real_edges_accuracy = 0
     invented_edges_accuracy = 0
     invented_wrong_edges_accuracy = 0
@@ -102,6 +151,19 @@ def check_graph(graph, real_graph):
     return real_edges_accuracy, invented_edges_accuracy, invented_wrong_edges_accuracy
 
 def test_real_graph_generation(initial_graph, functions, max_n_noise=20, iterations=20, folder='test'):
+    """
+    Tests various graph discovery methods for graph composition on the Sachs real dataset with added noise variables.
+
+    Parameters:
+    - initial_graph (networkx.DiGraph): The initial subgraph to start the discovery from.
+    - functions (list): A list of graph discovery method names as strings.
+    - max_n_noise (int): The maximum number of noise variables to add.
+    - iterations (int): The number of iterations to run for each noise level.
+    - folder (str): The folder to save the results in.
+
+    Saves the real graph only once when n_noise is 0 and iteration is 0.
+    Saves the discovered graphs for each method, noise level and iteration.
+    """
 
     for n_noise in range(max_n_noise + 1):
         print(f"Generating dataset with {n_noise} noise variables")
@@ -144,6 +206,20 @@ def test_real_graph_generation(initial_graph, functions, max_n_noise=20, iterati
                 save_graph_to_json(graph, n_noise, i+1, folder=path)
 
 def test_synthetic_graph_generation(starting_nodes, functions, dataset_size=1000, n_nodes=20, iterations=100, folder='test'):
+    """
+    Tests various graph discovery methods for graph composition on synthetic datasets with added noise variables.
+
+    Parameters:
+    - starting_nodes (int): The number of initial nodes to include in the subgraph.
+    - functions (list): A list of graph discovery method names as strings.
+    - dataset_size (int): The number of samples in the synthetic dataset.
+    - n_nodes (int): The total number of nodes in the synthetic graph.
+    - iterations (int): The number of iterations to run for each noise level.
+    - folder (str): The folder to save the results in.
+
+    Saves the real graph for each noise level and iteration.
+    Saves the discovered graphs for each method, noise level and iteration.
+    """
 
     for n_noise in range(n_nodes - starting_nodes + 1):
         print(f"Generating dataset with {n_noise} noise variables")
@@ -162,14 +238,14 @@ def test_synthetic_graph_generation(starting_nodes, functions, dataset_size=1000
             if (i+1) % 10 == 0:
                     print(f"Iteration {i+1}/{iterations}")
 
-            real_variables, _ = dataset.get_real_noise_nodes()
-            initial_variables = real_variables[:starting_nodes]
+            initial_variables = dataset.get_nodes()[:starting_nodes]
             initial_graph = get_initial_subgraph(dataset.get_graph(), initial_variables)
+            real_graph = dataset.get_graph()
 
             path = f'results_synthetic/{folder}/real_graph'
             if not os.path.exists(path):
                 os.makedirs(path)
-            save_graph_to_json(dataset.get_graph(), n_noise, i+1, folder=path)
+            save_graph_to_json(real_graph, n_noise, i+1, folder=path)
 
             df = dataset.get_dataframe()
 
@@ -198,6 +274,18 @@ def test_synthetic_graph_generation(starting_nodes, functions, dataset_size=1000
                 save_graph_to_json(graph, n_noise, i+1, folder=path)
 
 def evaluate_graphs(graphs_dict, real_graphs, is_real_data):
+    """
+    Evaluates the performance of various graph discovery methods by comparing their discovered graphs to the real graphs.
+
+    Parameters:
+    - graphs_dict (dict): A dictionary where keys are method names and values are dictionaries with noise levels as keys and lists of discovered graphs (networkx.DiGraph) as values.
+    - real_graphs (dict): A dictionary where keys are noise levels/iterations (or 'real' for real data) and values are the corresponding real graphs (networkx.DiGraph).
+    - is_real_data (bool): A flag indicating whether the data is real or synthetic.
+
+    Returns:
+    - dict: A dictionary containing evaluation metrics (AUC, SID, SHD, Edges Accuracy, Invented Edges Accuracy, Invented Wrong Edges Accuracy) for each method and noise level.
+    """
+
     results = {}
 
     if is_real_data:
