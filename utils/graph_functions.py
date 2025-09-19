@@ -221,6 +221,8 @@ def test_synthetic_graph_generation(starting_nodes, functions, dataset_size=1000
     Saves the discovered graphs for each method, noise level and iteration.
     """
 
+    model_dict = {}
+
     for n_noise in range(n_nodes - starting_nodes + 1):
         print(f"Generating dataset with {n_noise} noise variables")
 
@@ -232,25 +234,25 @@ def test_synthetic_graph_generation(starting_nodes, functions, dataset_size=1000
             n_noise_nodes=n_noise
         )
 
-        for i in range(iterations):
-            dataset.generate_samples()
+        edges_accuracy_test = 0
+        invented_edges_accuracy_test = 0
+        invented_wrong_edges_accuracy_test = 0
 
-            if (i+1) % 10 == 0:
-                    print(f"Iteration {i+1}/{iterations}")
+        for discovery_method in functions:
+            print(f"Running discovery method: {discovery_method}")
+            for i in range(iterations):
+                dataset.generate_samples()
 
-            initial_variables = dataset.get_nodes()[:starting_nodes]
-            initial_graph = get_initial_subgraph(dataset.get_graph(), initial_variables)
-            real_graph = dataset.get_graph()
+                df = dataset.get_dataframe()
+                nodes = dataset.get_nodes()
+                real_graph = dataset.get_graph()
 
-            path = f'results_synthetic/{folder}/real_graph'
-            if not os.path.exists(path):
-                os.makedirs(path)
-            save_graph_to_json(real_graph, n_noise, i+1, folder=path)
+                if (i+1) % 10 == 0:
+                        print(f"Iteration {i+1}/{iterations}")
 
-            df = dataset.get_dataframe()
-
-            for discovery_method in functions:
-                print(f"Running discovery method: {discovery_method}")
+                initial_variables = nodes[:starting_nodes]
+                initial_graph = get_initial_subgraph(real_graph, initial_variables)
+                
                 if discovery_method == 'NALiNGAMAlgorithm':
                     env = GraphEnvNALiNGAM(df, initial_graph)
                     found_state, _ = env.get_best_state_fast(30)
@@ -267,20 +269,37 @@ def test_synthetic_graph_generation(starting_nodes, functions, dataset_size=1000
                     except KeyError:
                         print(f"Discovery method {discovery_method} not found.")
                         continue
-                path = f'results_synthetic/{folder}/{discovery_method}'
-                # If folder does not exist, create it
-                if not os.path.exists(path):
-                    os.makedirs(path)
-                save_graph_to_json(graph, n_noise, i+1, folder=path)
+                real_edges_accuracy, invented_edges_accuracy, invented_wrong_edges_accuracy = check_graph(graph, real_graph)
 
-def evaluate_graphs(graphs_dict, real_graphs, is_real_data):
+                edges_accuracy_test += real_edges_accuracy
+                invented_edges_accuracy_test += invented_edges_accuracy
+                invented_wrong_edges_accuracy_test += invented_wrong_edges_accuracy
+
+            edges_accuracy_test = edges_accuracy_test / iterations
+            invented_edges_accuracy_test = invented_edges_accuracy_test / iterations
+            invented_wrong_edges_accuracy_test = invented_wrong_edges_accuracy_test / iterations
+
+            if discovery_method not in model_dict:
+                model_dict[discovery_method] = {
+                    'edges_accuracy': [],
+                    'invented_edges_accuracy': [],
+                    'invented_wrong_edges_accuracy': []
+                }
+            model_dict[discovery_method]['edges_accuracy'].append(edges_accuracy_test)
+            model_dict[discovery_method]['invented_edges_accuracy'].append(invented_edges_accuracy_test)
+            model_dict[discovery_method]['invented_wrong_edges_accuracy'].append(invented_wrong_edges_accuracy_test)
+
+            # Save the model_dict to a file
+            with open(f'graph_metrics/{folder}.json', 'w') as f:
+                json.dump(model_dict, f)
+
+def evaluate_graphs(graphs_dict, real_graphs):
     """
     Evaluates the performance of various graph discovery methods by comparing their discovered graphs to the real graphs.
 
     Parameters:
     - graphs_dict (dict): A dictionary where keys are method names and values are dictionaries with noise levels as keys and lists of discovered graphs (networkx.DiGraph) as values.
     - real_graphs (dict): A dictionary where keys are noise levels/iterations (or 'real' for real data) and values are the corresponding real graphs (networkx.DiGraph).
-    - is_real_data (bool): A flag indicating whether the data is real or synthetic.
 
     Returns:
     - dict: A dictionary containing evaluation metrics (AUC, SID, SHD, Edges Accuracy, Invented Edges Accuracy, Invented Wrong Edges Accuracy) for each method and noise level.
@@ -288,8 +307,7 @@ def evaluate_graphs(graphs_dict, real_graphs, is_real_data):
 
     results = {}
 
-    if is_real_data:
-        real_graph = real_graphs['real']
+    real_graph = real_graphs['real']
 
     for method in graphs_dict.keys():
         results[method] = {}
@@ -307,8 +325,6 @@ def evaluate_graphs(graphs_dict, real_graphs, is_real_data):
             invented_edges_accuracy = 0
             invented_wrong_edges_accuracy = 0
             for i, graph in enumerate(graphs):
-                if not is_real_data:
-                    real_graph = real_graphs[f'{noise_level}_{i}']
                 temp_edges_accuracy, temp_invented_edges_accuracy, temp_invented_wrong_edges_accuracy = check_graph(graph, real_graph)
                 edges_accuracy += temp_edges_accuracy
                 invented_edges_accuracy += temp_invented_edges_accuracy
