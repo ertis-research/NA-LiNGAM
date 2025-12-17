@@ -1,8 +1,7 @@
 ##############################################
 ############## IMPORT LIBRARIES ##############
 ##############################################
-
-from ylearn.causal_discovery import CausalDiscovery
+from cdt.causality.graph import CCDr
 import networkx as nx
 import numpy as np
 
@@ -10,25 +9,16 @@ import numpy as np
 ############## CLASS DEFINITION ##############
 ##############################################
 
-class NOTEARSAlgorithm():
+class CCDrAlgorithm():
     def __init__(self, data, variables):
         self.data = data
         self.variables = variables
 
-        cd = CausalDiscovery(hidden_layer_dim=[3])
-        est_dict = cd(self.data, threshold=0.01, return_dict=True)
-        # print(est_dict)
-        # OrderedDict([('A', []), ('B', ['A', 'C', 'D', 'E']), ('C', []), ('D', ['A', 'E']), ('E', [])])
-        self.nodes = list(est_dict.keys())
-        self.edges = []
-        for child, parents in est_dict.items():
-            for parent in parents:
-                self.edges.append((parent, child))
+        cd = CCDr()
+        self.graph = cd.predict(self.data)
                 
-        self.graph = nx.DiGraph()
-        self.graph.add_nodes_from(self.nodes)
-        self.graph.add_edges_from(self.edges)
-
+        self.nodes = list(self.graph.nodes())
+        self.edges = list(self.graph.edges())
 
 ##############################################
 ############## GRAPH FUNCTIONS ###############
@@ -53,6 +43,6 @@ if __name__ == '__main__':
     import pandas as pd
     dataframe = pd.DataFrame(data, columns=variables)
 
-    notears = NOTEARSAlgorithm(dataframe, variables)
-    print(notears.get_edges())
-    print(notears.get_nodes())
+    ccdr = CCDrAlgorithm(dataframe, variables)
+    print(ccdr.get_edges())
+    print(ccdr.get_nodes())

@@ -17,7 +17,11 @@ functions_list = [
    'ExactSearchAlgorithm',
    'LiNGAMAlgorithm',
    'GRaSPAlgorithm',
-   'GrangerAlgorithm'
+   'GrangerAlgorithm',
+   'NOTEARSAlgorithm',
+   'CAMAlgorithm',
+   #'CCDrAlgorithm',
+   'GIESAlgorithm'
 ]
 
 test_synthetic_graph_generation(3, functions_list, iterations=20, folder='results_all_20_noise_20_iter')

@@ -192,3 +192,6 @@ tsmixer_models/
 
 # Certificates
 *.cer
+
+# Documents
+*.pdf
