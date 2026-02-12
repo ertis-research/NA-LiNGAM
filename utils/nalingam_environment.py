@@ -131,6 +131,7 @@ class GraphEnvNALiNGAM:
         - best_state (list): The best state found.
         - best_score (float): The score of the best state.
         """
+        
         initial_states = []
         initial_score = self.get_score(self.initial_state, num_iter=num_iter)
 

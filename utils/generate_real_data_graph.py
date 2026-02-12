@@ -3,8 +3,74 @@ import pandas as pd
 import random
 
 import networkx as nx
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from causallearn.utils.Dataset import load_dataset
+from utils.constants import adabyron_simplified_vars, adabyron_posible_edges, adabyron_renames
+
+class AdaByronData:
+    def __init__(self, n_noise=0, diff=True):
+        """
+        Creates a real data graph based on the AdaByron dataset with optional noise nodes.
+
+        Parameters:
+        - n_noise (int): Number of noise nodes to add to the dataset.
+        - diff (bool): Whether to use differenced data or not.
+        """
+
+        if diff:
+            df = pd.read_csv('datasets/adabyron_preprocessed_hourly_residuals_diffArima.csv')
+        else:
+            df = pd.read_csv('datasets/adabyron_preprocessed_hourly.csv')
+        df.dropna(inplace=True)
+
+        self.dataframe = df.copy()
+
+        self.real_nodes = adabyron_simplified_vars
+        
+        # Extra data processing specific to AdaByron dataset
+        self.dataframe['_time'] = pd.to_datetime(self.dataframe['_time'], format='mixed')
+        self.dataframe = self.dataframe.set_index('_time')
+        self.dataframe = self.dataframe[self.real_nodes]
+        self.dataframe = self.dataframe.resample('H').mean()
+        self.dataframe.dropna(inplace=True)
+
+        for j in range(n_noise):
+            np.random.seed(None)
+            shift_amount = np.random.randint(low=12, high=24)
+            # print('Noise node', j, 'shift amount:', shift_amount)
+            original_var = random.choice(self.real_nodes)
+            shifted_signal = np.roll(self.dataframe[original_var].values, shift_amount)
+            self.dataframe[f'Noise_{j}'] = shifted_signal
+
+        real_edges = adabyron_posible_edges
+
+        self.graph = nx.DiGraph()
+        self.graph.add_nodes_from(self.real_nodes)
+        self.graph.add_edges_from(real_edges)
+
+    def get_nodes(self):
+        """
+        Returns the list of nodes in the graph.
+        """
+        return list(self.dataframe.columns)
+    
+    def get_edges(self):
+        """
+        Returns the list of edges in the real graph.
+        """
+        return list(self.graph.edges())
+    
+    def get_dataframe(self):
+        """
+        Returns the dataframe used to create the graph.
+        """
+        return self.dataframe
+    
+    def get_graph(self):
+        """
+        Returns the real graph created from the dataframe.
+        """
+        return self.graph
 
 class RealDataSachs:
     def __init__(self, n_noise=0):

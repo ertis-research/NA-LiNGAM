@@ -195,3 +195,6 @@ tsmixer_models/
 
 # Documents
 *.pdf
+
+# Datasets
+datasets/

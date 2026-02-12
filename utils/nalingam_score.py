@@ -35,7 +35,6 @@ class NALiNGAMScoreAlgorithm():
         """
         self.data = data
         self.variables = variables
-
         self.model = lingam.ICALiNGAM()
         self.model.fit(self.data[self.variables])
 

@@ -4,7 +4,7 @@
 
 from utils.nalingam_environment import GraphEnvNALiNGAM
 
-from utils.generate_real_data_graph import RealDataSachs
+from utils.generate_real_data_graph import RealDataSachs, AdaByronData
 from utils.generate_synthetic_graph import SyntheticGraphGenerator
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import RobustScaler, PowerTransformer
@@ -72,8 +72,12 @@ def save_graph_to_json(graph, n_noise, iterations, folder):
     - iterations (int): The iteration number to name the file.
     - folder (str): The folder to save the graph in.
     """
-    data = json_graph.node_link_data(graph)
-    with open(f'{folder}/graph_noise_{str(n_noise)}_it_{str(iterations)}.json', 'w') as f:
+    if graph is not None:
+        data = json_graph.node_link_data(graph)
+    else:
+        data = None
+    file_path = os.path.join(folder, f'graph_noise_{n_noise}_it_{iterations}.json')
+    with open(file_path, 'w') as f:
         json.dump(data, f)
 
 def load_graph_from_json(file_path):
@@ -88,7 +92,11 @@ def load_graph_from_json(file_path):
     """
     with open(file_path, 'r') as f:
         data = json.load(f)
-    return json_graph.node_link_graph(data)
+
+    if data is None:
+        return None
+    else:
+        return json_graph.node_link_graph(data)
 
 def is_path(graph, start, end):
     """
@@ -154,7 +162,7 @@ def check_graph(graph, real_graph):
 
     return real_edges_accuracy, invented_edges_accuracy, invented_wrong_edges_accuracy
 
-def test_real_graph_generation(initial_graph, functions, max_n_noise=20, iterations=20, folder='test'):
+def test_real_graph_generation(initial_graph, functions, max_n_noise=20, iterations=20, folder='test', dataset_class=RealDataSachs, nalingam_score_iterations=30, nalingam_graph_iterations=20):
     """
     Tests various graph discovery methods for graph composition on the Sachs real dataset with added noise variables.
 
@@ -169,11 +177,11 @@ def test_real_graph_generation(initial_graph, functions, max_n_noise=20, iterati
     Saves the discovered graphs for each method, noise level and iteration.
     """
 
-    for n_noise in range(4, max_n_noise + 1):
+    for n_noise in range(0, max_n_noise + 1):
         print(f"Generating dataset with {n_noise} noise variables")
         
         for i in range(iterations):
-            dataset = RealDataSachs(n_noise=n_noise)
+            dataset = dataset_class(n_noise=n_noise)
             df = dataset.get_dataframe()
             
             if n_noise == 0 and i == 0:
@@ -186,30 +194,35 @@ def test_real_graph_generation(initial_graph, functions, max_n_noise=20, iterati
             if (i+1) % 10 == 0:
                 print(f"Iteration {i+1}/{iterations}")
             for discovery_method in functions:
-                print(f"Running discovery method: {discovery_method}")
-                if discovery_method == 'NALiNGAMAlgorithm':
-                    env = GraphEnvNALiNGAM(df, initial_graph)
-                    found_state, _ = env.get_best_state_fast(30)
+                try:
+                    print(f"Running discovery method: {discovery_method}")
+                    if discovery_method == 'NALiNGAMAlgorithm':
+                        env = GraphEnvNALiNGAM(df, initial_graph)
+                        found_state, _ = env.get_best_state_fast(nalingam_score_iterations)
 
-                    graph = env.get_graph(found_state, iterations=20)
-                elif discovery_method == 'LiNGAMAlgorithm':
-                    env = GraphEnvNALiNGAM(df, initial_graph)
+                        graph = env.get_graph(found_state, iterations=nalingam_graph_iterations)
+                    elif discovery_method == 'LiNGAMAlgorithm':
+                        env = GraphEnvNALiNGAM(df, initial_graph)
 
-                    graph = env.get_graph(np.ones(len(df.columns) - len(list(initial_graph.nodes()))), iterations=1) # Using NA-LiNGAM with 1 iteration to simulate LiNGAM without score
-                else:
-                    try:
-                        discovery_method_function = globals()[discovery_method]
-                        graph = discovery_method_function(df, df.columns).get_graph()
-                    except KeyError:
-                        print(f"Discovery method {discovery_method} not found.")
-                        continue
-                path = f'results_real/{folder}/{discovery_method}'
-                # If folder does not exist, create it
-                if not os.path.exists(path):
-                    os.makedirs(path)
-                save_graph_to_json(graph, n_noise, i+1, folder=path)
+                        graph = env.get_graph(np.ones(len(df.columns) - len(list(initial_graph.nodes()))), iterations=1) # Using NA-LiNGAM with 1 iteration to simulate LiNGAM without score
+                    else:
+                        try:
+                            discovery_method_function = globals()[discovery_method]
+                            graph = discovery_method_function(df, df.columns).get_graph()
+                        except KeyError:
+                            print(f"Discovery method {discovery_method} not found.")
+                            continue
+                    path = f'results_real/{folder}/{discovery_method}'
+                    # If folder does not exist, create it
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+                    save_graph_to_json(graph, n_noise, i+1, folder=path)
+                except Exception as e:
+                    print(f"Error running discovery method {discovery_method} with n_noise={n_noise} and iteration={i+1}: {e}")
+                    path = f'results_real/{folder}/{discovery_method}'
+                    save_graph_to_json(None, n_noise, i+1, folder=path)
 
-def test_synthetic_graph_generation(starting_nodes, functions, max_n_noise=20, iterations=20, dataset_size=1000, n_real_nodes=10, folder='test'):
+def test_synthetic_graph_generation(starting_nodes, functions, max_n_noise=20, iterations=20, dataset_size=1000, n_real_nodes=10, folder='test', nalingam_score_iterations=30, nalingam_graph_iterations=20):
     """
     Tests various graph discovery methods for graph composition on the Sachs real dataset with added noise variables.
 
@@ -259,9 +272,9 @@ def test_synthetic_graph_generation(starting_nodes, functions, max_n_noise=20, i
                 print(f"Running discovery method: {discovery_method}")
                 if discovery_method == 'NALiNGAMAlgorithm':
                     env = GraphEnvNALiNGAM(df, initial_graph)
-                    found_state, _ = env.get_best_state_fast(30)
+                    found_state, _ = env.get_best_state_fast(nalingam_score_iterations)
 
-                    graph = env.get_graph(found_state, iterations=20)
+                    graph = env.get_graph(found_state, iterations=nalingam_graph_iterations)
                 elif discovery_method == 'LiNGAMAlgorithm':
                     env = GraphEnvNALiNGAM(df, initial_graph)
 
@@ -303,6 +316,8 @@ def evaluate_graphs(graphs_dict, real_graphs, is_real_data):
         method_results = {'AUC': [], 'SID': [], 'SHD': [], 'Edges Accuracy': [],
                          'Invented Edges Accuracy': [], 'Invented Wrong Edges Accuracy': []}
         for noise_level in graph_info.keys():
+            if method == 'GrangerAlgorithm':
+                continue
             print(f"Evaluating method: {method}, Noise level: {noise_level}")
 
             graphs = graph_info[noise_level]
@@ -318,29 +333,43 @@ def evaluate_graphs(graphs_dict, real_graphs, is_real_data):
                     if not is_real_data:
                         real_graph = real_graphs[noise_level][i]
 
-                    nodes_test = list(set(list(real_graph.nodes()) + list(graph.nodes())))
+                    if graph is None:
+                        edges_accuracy += 0
+                        invented_edges_accuracy += 1
+                        invented_wrong_edges_accuracy += 1
+                        temp_auc += 0
+                        temp_sid += len(real_graph.nodes()) * (len(real_graph.nodes()) - 1) / 2
+                        temp_shd += len(real_graph.edges())
 
-                    graph_test = nx.DiGraph()
-                    graph_test.add_nodes_from(nodes_test)
-                    graph_test.add_edges_from(graph.edges())
+                    else:
+                        nodes_test = list(set(list(real_graph.nodes()) + list(graph.nodes())))
 
-                    real_graph_test = nx.DiGraph()
-                    real_graph_test.add_nodes_from(nodes_test)
-                    real_graph_test.add_edges_from(real_graph.edges())
+                        graph_test = nx.DiGraph()
+                        graph_test.add_nodes_from(nodes_test)
+                        graph_test.add_edges_from(graph.edges())
 
-                    temp_edges_accuracy, temp_invented_edges_accuracy, temp_invented_wrong_edges_accuracy = check_graph(graph_test, real_graph_test)
-                    edges_accuracy += temp_edges_accuracy
-                    invented_edges_accuracy += temp_invented_edges_accuracy
-                    invented_wrong_edges_accuracy += temp_invented_wrong_edges_accuracy
+                        real_graph_test = nx.DiGraph()
+                        real_graph_test.add_nodes_from(nodes_test)
+                        real_graph_test.add_edges_from(real_graph.edges())
 
-                    # Add nodes from real_graph to the graph if they are missing
-                    missing_nodes = set(real_graph.nodes()) - set(graph.nodes())
-                    for node in missing_nodes:
-                        graph.add_node(node)
-                    predicted_scores = [metric(real_graph_test, graph_test) for metric in (precision_recall, SID, SHD)]
-                    temp_auc += predicted_scores[0][0]
-                    temp_sid += predicted_scores[1]
-                    temp_shd += predicted_scores[2]
+                        temp_edges_accuracy, temp_invented_edges_accuracy, temp_invented_wrong_edges_accuracy = check_graph(graph_test, real_graph_test)
+                        edges_accuracy += temp_edges_accuracy
+                        invented_edges_accuracy += temp_invented_edges_accuracy
+                        invented_wrong_edges_accuracy += temp_invented_wrong_edges_accuracy
+
+                        temp_auc += precision_recall(real_graph_test, graph_test)[0]
+                        temp_shd += SHD(real_graph_test, graph_test)
+
+                        # Add nodes from real_graph to the graph if they are missing
+                        missing_nodes = set(real_graph.nodes()) - set(graph.nodes())
+                        for node in missing_nodes:
+                            graph.add_node(node)
+                        # predicted_scores = [metric(real_graph_test, graph_test) for metric in (precision_recall, SID, SHD)]
+                        # temp_auc += predicted_scores[0][0]
+                        # temp_sid += predicted_scores[1]
+                        # temp_shd += predicted_scores[2]
+
+                        temp_sid += SID(real_graph_test, graph_test)
 
                 num_graphs = len(graphs)
                 if num_graphs > 0:
