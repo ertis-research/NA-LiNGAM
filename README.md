@@ -8,7 +8,7 @@ The code related to the NA-LiNGAM algorithm itself is composed by two scripts: *
 
 ## Datasets generators
 
-There are two types of dataset generators: synthetic and real data generators. Both of them have the methods neccesary to obtain all the data and graph information about them after the generation process. The real data generator has only implemented the [Sachs et Al., 2005](https://www.science.org/doi/10.1126/science.1105809) dataset about cellular signaling networks using protein measurements from human cells of the immune system. Also the synthetic generator has a function called *generate_samples*, which generates a new set of nodes and relationships to the already set parameters.
+There are two types of dataset generators: synthetic and real data generators. Both of them have the methods neccesary to obtain all the data and graph information about them after the generation process. The real data generator has implemented the [Sachs et Al., 2005](https://www.science.org/doi/10.1126/science.1105809) dataset about cellular signaling networks using protein measurements from human cells of the immune system, and a use case about consumption in our research building (however this dataset is private). Also the synthetic generator has a function called *generate_samples*, which generates a new set of nodes and relationships to the already set parameters.
 
 ## Test scripts
 
