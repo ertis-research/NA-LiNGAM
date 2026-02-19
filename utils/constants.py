@@ -41,6 +41,10 @@ adabyron_posible_edges = [
     ("Weather_Temperature", "AC_B_Energy_Wh"),
 
     # --- Building to consumption ---
+    ("Air_Treatment_Climate_A_Energy_Wh", "AC_A_Energy_Wh"),
+    ("Air_Treatment_Climate_A_Energy_Wh", "Air_Treatment_Heat_Pump_Energy_Wh"),
+    ("Air_Treatment_Climate_B_Energy_Wh", "AC_B_Energy_Wh"),
+    ("Air_Treatment_Climate_B_Energy_Wh", "Air_Treatment_Heat_Pump_Energy_Wh"),
     ("AC_A_Energy_Wh", "Consumption_Wh"),
     ("AC_B_Energy_Wh", "Consumption_Wh"),
     ("Air_Treatment_Heat_Pump_Energy_Wh", "Consumption_Wh")
