@@ -29,6 +29,7 @@ import json
 from utils.cdmodels.pc import PCAlgorithm
 from utils.cdmodels.fci import FCIAlgorithm
 from utils.cdmodels.ges import GESAlgorithm
+from utils.cdmodels.boss import BOSSAlgorithm
 from utils.cdmodels.gin import GINAlgorithm
 from utils.cdmodels.exact_search import ExactSearchAlgorithm
 from utils.cdmodels.grasp import GRaSPAlgorithm
@@ -238,7 +239,7 @@ def test_synthetic_graph_generation(starting_nodes, functions, max_n_noise=20, i
     Saves the discovered and real graphs for each method, noise level and iteration.
     """
 
-    for n_noise in range(4, max_n_noise + 1):
+    for n_noise in range(max_n_noise + 1):
         print(f"Generating dataset with {n_noise} noise variables")
         
         dataset = SyntheticGraphGenerator(

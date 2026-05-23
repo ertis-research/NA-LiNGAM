@@ -111,7 +111,7 @@ class NALiNGAMScoreAlgorithm():
         
         return results  
 
-    def validate_edges_bootstrap(self, num_samples=10):
+    def validate_edges_bootstrap(self, num_samples=10, with_replacement=True):
         """
         Validates the edges of the LiNGAM graph using bootstrap sampling.
 
@@ -127,7 +127,7 @@ class NALiNGAMScoreAlgorithm():
         adjacency_counts = np.zeros((num_vars, num_vars))  # Matriz para contar apariciones de aristas
 
         for _ in range(num_samples):
-            sample_data = data.sample(frac=1, replace=True)  # Bootstrap con reemplazo
+            sample_data = data.sample(frac=1, replace=with_replacement)  # Bootstrap con reemplazo
             model = lingam.ICALiNGAM().fit(sample_data)  # Reentrenar modelo
             adjacency_counts += (model.adjacency_matrix_ != 0)  # Sumar aparición de aristas
 

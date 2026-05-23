@@ -20,7 +20,7 @@ import time
 
 def test_algorithm(syn_graph, n_tests=10, starting_nodes=2):
     """
-    Test the execution time of the NALiNGAM algorithm and its optimized version.
+    Test the execution time of the optimized NALiNGAM algorithm.
 
     Parameters:
     - syn_graph (SyntheticGraphGenerator): The synthetic graph generator instance.
@@ -28,10 +28,8 @@ def test_algorithm(syn_graph, n_tests=10, starting_nodes=2):
     - starting_nodes (int): Number of initial nodes in the subgraph.
 
     Returns:
-    - slow_time_mean (float): Average execution time of the standard NALiNGAM
     - fast_time_mean (float): Average execution time of the optimized NALiNGAM
     """
-    slow_time_mean = 0
     fast_time_mean = 0
 
     for _ in range(n_tests):
@@ -50,29 +48,24 @@ def test_algorithm(syn_graph, n_tests=10, starting_nodes=2):
             if node in env.new_features:
                 optimal_state[env.new_features.index(node)] = 1
 
-        slow_time_start = time.time()
-        env.get_best_state()
-        slow_time_end = time.time()
-
         fast_time_start = time.time()
         env.get_best_state_fast()
         fast_time_end = time.time()
 
-        slow_time_mean += slow_time_end - slow_time_start
         fast_time_mean += fast_time_end - fast_time_start
 
-    return slow_time_mean / n_tests, fast_time_mean / n_tests
+    return fast_time_mean / n_tests
 
 if __name__ == '__main__':
     dataset_size = 1000
     n_tests = 10
+    min_nodes = 0
     max_nodes = 100
     starting_nodes = 3
 
-    algorithm_time_history = []
     fast_algorithm_time_history = []
 
-    for i in range(max_nodes - starting_nodes + 1):
+    for i in range(min_nodes, max_nodes - starting_nodes + 1):
         print(f'Testing with {i} variables')
         syn_graph = SyntheticGraphGenerator(
             sample_size=dataset_size,
@@ -82,15 +75,14 @@ if __name__ == '__main__':
             n_noise_nodes=0
         )
 
-        algorithm_time_mean, fast_algorithm_time_mean = test_algorithm(syn_graph, n_tests, starting_nodes)
+        fast_algorithm_time_mean = test_algorithm(syn_graph, n_tests, starting_nodes)
 
-        algorithm_time_history.append(algorithm_time_mean)
         fast_algorithm_time_history.append(fast_algorithm_time_mean)
 
-        model_dict = { 'slow_time': algorithm_time_history, 'fast_time': fast_algorithm_time_history }
+        model_dict = { 'fast_time': fast_algorithm_time_history }
 
         # Save the model_dict to a file
-        with open('graph_metrics/execution_time_1iter.json', 'w') as f:
+        with open('graph_metrics/execution_time_1iter_fast.json', 'w') as f:
             json.dump(model_dict, f)
 
     print('Finished testing')
