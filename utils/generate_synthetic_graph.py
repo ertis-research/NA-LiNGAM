@@ -6,7 +6,7 @@ import networkx as nx
 from sklearn.preprocessing import MinMaxScaler
 
 class SyntheticGraphGenerator:
-    def __init__(self, sample_size, node_size, min_edges=1, n_noise_nodes=0, max_edges=None, seed=None):
+    def __init__(self, sample_size, node_size, min_edges=1, n_noise_nodes=0, max_edges=None, seed=None, non_linear=False):
         """
         Initializes the SyntheticGraphGenerator with the given parameters.
 
@@ -17,6 +17,7 @@ class SyntheticGraphGenerator:
         - n_noise_nodes (int): Number of noise nodes to add.
         - max_edges (int or None): Maximum number of incoming edges per node. If None, it defaults to node_size - 1.
         - seed (int or None): Random seed for reproducibility.
+        - non_linear (bool): Whether to generate non-linear relationships between nodes.
         """
         if n_noise_nodes > node_size:
             raise ValueError("Number of noise nodes must be less than or equal to the number of nodes.")
@@ -34,6 +35,7 @@ class SyntheticGraphGenerator:
         self.min_edges = min_edges
         self.n_noise_nodes = n_noise_nodes
         self.seed = seed
+        self.non_linear = non_linear
 
         if self.seed is not None:
             np.random.seed(self.seed)
@@ -79,7 +81,28 @@ class SyntheticGraphGenerator:
             for j in range(i):
                 if self.adjanecy_matrix[i][j] == 1:
                     rand_pond = np.random.random()
-                    node_sample += data_list[j] * rand_pond
+
+                    if self.non_linear:
+                        transformation = np.random.choice(['sin', 'cos', 'square', 'cube', 'tanh', 'abs', 'log'])
+
+                        if transformation == 'sin':
+                            transformed_data = np.sin(data_list[j] * np.pi)
+                        elif transformation == 'cos':
+                            transformed_data = np.cos(data_list[j] * np.pi)
+                        elif transformation == 'square':
+                            transformed_data = np.power(data_list[j], 2)
+                        elif transformation == 'tanh':
+                            transformed_data = np.tanh(data_list[j])
+                        elif transformation == 'abs':
+                            transformed_data = np.abs(data_list[j])
+                        elif transformation == 'log':
+                            # log1p (log(1 + x)) to avoid issues with log(0) and negative values
+                            transformed_data = np.log1p(np.abs(data_list[j]))
+                            
+                        node_sample += transformed_data * rand_pond
+                    else: # Linear original relationship
+                        node_sample += data_list[j] * rand_pond
+
                     self.ponderated_matrix[i][j] = rand_pond
 
             node_sample = np.array(node_sample)

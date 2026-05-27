@@ -25,7 +25,7 @@ from scipy.stats import pearsonr
 
 class NALiNGAMScoreAlgorithm():
     
-    def __init__(self, data, variables):
+    def __init__(self, data, variables, p_reg=1, p_perm=1, p_boots=1, p_miss=1, p_miss_penalty=10, permutation_iterations=10, bootstrap_iterations=10):
         """
         Initializes the NALiNGAMScoreAlgorithm with the given data and variables.
 
@@ -35,6 +35,16 @@ class NALiNGAMScoreAlgorithm():
         """
         self.data = data
         self.variables = variables
+
+        self.p_reg = p_reg
+        self.p_perm = p_perm
+        self.p_boots = p_boots
+        self.p_miss = p_miss
+        self.p_miss_penalty = p_miss_penalty
+
+        self.permutation_iterations = permutation_iterations
+        self.bootstrap_iterations = bootstrap_iterations
+
         self.model = lingam.ICALiNGAM()
         self.model.fit(self.data[self.variables])
 
@@ -215,8 +225,8 @@ class NALiNGAMScoreAlgorithm():
         total_score = 0
         for _ in range(num_iter):
             results_regression = self.validate_edges_regression()
-            results_permutation = self.validate_edges_permutation(num_permutations=10)
-            results_bootstrap = self.validate_edges_bootstrap(num_samples=10)
+            results_permutation = self.validate_edges_permutation(num_permutations=self.permutation_iterations)
+            results_bootstrap = self.validate_edges_bootstrap(num_samples=self.bootstrap_iterations)
             if show: print('Selected edges:')
             sample_score = 0
             for (x, y) in results_regression.keys():
@@ -228,7 +238,20 @@ class NALiNGAMScoreAlgorithm():
                     boots_score = results_bootstrap[(x, y)]
                 
                 if show: print(f"Edge: {x} -> {y}: Reg: {1 - reg_score}, Perm: {1 - perm_score}, Boots: {boots_score}")
-                score = ((1 - reg_score) + (1 - perm_score)) * (boots_score / 2)
+                # score = ((1 - reg_score) + (1 - perm_score)) * (boots_score / 2) # ORIGINAL
+                
+                if self.p_reg == 0 and self.p_perm == 0:
+                    score = 1
+                elif self.p_reg == 0 or self.p_perm == 0:
+                    score = ((1 - reg_score)*self.p_reg + (1 - perm_score)*self.p_perm)
+                else:
+                    score = ((1 - reg_score)*self.p_reg + (1 - perm_score)*self.p_perm) / 2
+
+                if self.p_reg == 0 and self.p_perm == 0 and self.p_boots == 0:
+                    score = 0
+                if self.p_boots != 0:
+                    score *= boots_score*self.p_boots
+
                 sample_score += score
 
             n_miss_edges = 0
@@ -237,10 +260,10 @@ class NALiNGAMScoreAlgorithm():
                 if (x, y) not in results_regression.keys():
                     if not self.has_relations(x) or not self.has_relations(y):
                         if show: print(f"Edge: {x} -> {y}: Boots: {results_bootstrap[(x, y)]} BAD EDGE")
-                        score_miss += 10
+                        score_miss += self.p_miss_penalty
                     else:
                         if show: print(f"Edge: {x} -> {y}: Boots: {results_bootstrap[(x, y)]}")
-                        score_miss += results_bootstrap[(x, y)]
+                        score_miss += results_bootstrap[(x, y)] * self.p_miss
                     n_miss_edges += 1
             if n_miss_edges > 0:
                 score_miss = score_miss / n_miss_edges

@@ -160,7 +160,7 @@ def test_algorithm(syn_graph, n_tests=10, starting_nodes=3):
 
 if __name__ == "__main__":
     dataset_size = 1000
-    n_tests = 20
+    n_tests = 50
     n_real_nodes = 10
     max_n_noise = 20
     starting_nodes = 3
@@ -219,13 +219,13 @@ if __name__ == "__main__":
             'Stability': stability_sid_history
         }
 
-        with open(f'graph_metrics/bootstrap_validation_auc_20_20.json', 'w') as f:
+        with open(f'graph_metrics/bootstrap_validation_auc_50_20.json', 'w') as f:
             json.dump(results_auc, f)
 
-        with open(f'graph_metrics/bootstrap_validation_shd_20_20.json', 'w') as f:
+        with open(f'graph_metrics/bootstrap_validation_shd_50_20.json', 'w') as f:
             json.dump(results_shd, f)
 
-        with open(f'graph_metrics/bootstrap_validation_sid_20_20.json', 'w') as f:
+        with open(f'graph_metrics/bootstrap_validation_sid_50_20.json', 'w') as f:
             json.dump(results_sid, f)
 
         print('Finished testing')

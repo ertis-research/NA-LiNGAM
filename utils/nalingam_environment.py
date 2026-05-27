@@ -18,7 +18,7 @@ import concurrent.futures
 ##############################################
 
 class GraphEnvNALiNGAM:
-    def __init__(self, data, initial_graph):
+    def __init__(self, data, initial_graph, p_reg=1, p_perm=1, p_boots=1, p_miss=1, p_miss_penalty=10, permutation_iterations=10, bootstrap_iterations=10):
         """
         Environment for the NALiNGAM algorithm.
 
@@ -38,6 +38,13 @@ class GraphEnvNALiNGAM:
 
         self.initial_state = np.zeros(len(self.new_features))
 
+        self.p_reg = p_reg
+        self.p_perm = p_perm
+        self.p_boots = p_boots
+        self.p_miss = p_miss
+        self.p_miss_penalty = p_miss_penalty
+        self.permutation_iterations = permutation_iterations
+        self.bootstrap_iterations = bootstrap_iterations
 ##############################################
 ############ GETTERS AND SETTERS #############
 ##############################################
@@ -73,13 +80,12 @@ class GraphEnvNALiNGAM:
         best_score = -np.inf
 
         for _ in range(iterations):
-            self.lingam = NALiNGAMScoreAlgorithm(self.data, self.init_vars + selected_features)
+            self.lingam = NALiNGAMScoreAlgorithm(self.data, self.init_vars + selected_features, p_reg=self.p_reg, p_perm=self.p_perm, p_boots=self.p_boots, p_miss=self.p_miss, p_miss_penalty=self.p_miss_penalty, permutation_iterations=self.permutation_iterations, bootstrap_iterations=self.bootstrap_iterations)
             score = self.lingam.get_score(num_iter=1)
 
             if score > best_score:
                 best_score = score
                 selected_lingam = self.lingam
-
         self.lingam = selected_lingam
 
         graph = nx.DiGraph()
@@ -113,7 +119,7 @@ class GraphEnvNALiNGAM:
         """
         selected_features = [feature for feature, mask in zip(self.new_features, state) if mask == 1]
         
-        lingam = NALiNGAMScoreAlgorithm(self.data, self.init_vars + selected_features)
+        lingam = NALiNGAMScoreAlgorithm(self.data, self.init_vars + selected_features, p_reg=self.p_reg, p_perm=self.p_perm, p_boots=self.p_boots, p_miss=self.p_miss, p_miss_penalty=self.p_miss_penalty, permutation_iterations=self.permutation_iterations, bootstrap_iterations=self.bootstrap_iterations)
 
         score = lingam.get_score(num_iter=num_iter, show=show)
 

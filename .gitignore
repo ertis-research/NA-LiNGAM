@@ -198,3 +198,5 @@ tsmixer_models/
 
 # Datasets
 datasets/
+*.out
+*.txt

@@ -223,9 +223,9 @@ def test_real_graph_generation(initial_graph, functions, max_n_noise=20, iterati
                     path = f'results_real/{folder}/{discovery_method}'
                     save_graph_to_json(None, n_noise, i+1, folder=path)
 
-def test_synthetic_graph_generation(starting_nodes, functions, max_n_noise=20, iterations=20, dataset_size=1000, n_real_nodes=10, folder='test', nalingam_score_iterations=30, nalingam_graph_iterations=20):
+def test_synthetic_graph_generation(starting_nodes, functions, max_n_noise=20, iterations=20, dataset_size=1000, n_real_nodes=10, folder='test', nalingam_score_iterations=30, nalingam_graph_iterations=20, non_linear=False):
     """
-    Tests various graph discovery methods for graph composition on the Sachs real dataset with added noise variables.
+    Tests various graph discovery methods for graph composition on the real dataset with added noise variables.
 
     Parameters:
     - starting_nodes (int): The number of initial nodes to include in the subgraph.
@@ -247,7 +247,8 @@ def test_synthetic_graph_generation(starting_nodes, functions, max_n_noise=20, i
             node_size=n_real_nodes + n_noise,
             min_edges=2,
             max_edges=5,
-            n_noise_nodes=n_noise
+            n_noise_nodes=n_noise,
+            non_linear=non_linear
             )
 
         for i in range(iterations):
@@ -384,3 +385,70 @@ def evaluate_graphs(graphs_dict, real_graphs, is_real_data):
                 results[method] = method_results.copy()
 
     return results
+
+def test_real_ablation(initial_graph, parameters, max_n_noise=20, iterations=20, folder='test', dataset_class=RealDataSachs, nalingam_score_iterations=30, nalingam_graph_iterations=20):
+    """
+    Tests various ablation settings for the NALiNGAM graph discovery method on the real dataset with added noise variables.
+
+    Parameters:
+    - initial_graph (networkx.DiGraph): The initial subgraph to start the discovery from.
+    - parameters (list): A list of dictionaries containing parameters for each graph discovery method.
+    - max_n_noise (int): The maximum number of noise variables to add.
+    - iterations (int): The number of iterations to run for each noise level.
+    - folder (str): The folder to save the results in.
+
+    Saves the real graph only once when n_noise is 0 and iteration is 0.
+    Saves the discovered graphs for each method, noise level and iteration.
+    """
+
+    for n_noise in range(0, max_n_noise + 1):
+        print(f"Generating dataset with {n_noise} noise variables")
+        
+        for i in range(iterations):
+            dataset = dataset_class(n_noise=n_noise)
+            df = dataset.get_dataframe()
+            
+            if n_noise == 0 and i == 0:
+                # Save the real graph only once
+                path = f'results_real/{folder}/real_graph'
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                save_graph_to_json(dataset.get_graph(), n_noise, i+1, folder=path)
+
+            if (i+1) % 10 == 0:
+                print(f"Iteration {i+1}/{iterations}")
+            for param in parameters:
+                ablation_method = param['name']
+                try:
+                    print(f"Running discovery method: {ablation_method}")
+
+                    if 'p_reg' not in param:
+                        param['p_reg'] = 1
+                    if 'p_perm' not in param:
+                        param['p_perm'] = 1
+                    if 'p_boots' not in param:
+                        param['p_boots'] = 1
+                    if 'p_miss' not in param:
+                        param['p_miss'] = 1
+                    if 'p_miss_penalty' not in param:
+                        param['p_miss_penalty'] = 10
+                    if 'permutation_iterations' not in param:
+                        param['permutation_iterations'] = 10
+                    if 'bootstrap_iterations' not in param:
+                        param['bootstrap_iterations'] = 10
+
+                    env = GraphEnvNALiNGAM(df, initial_graph, p_reg=param['p_reg'], p_perm=param['p_perm'], p_boots=param['p_boots'], p_miss=param['p_miss'], p_miss_penalty=param['p_miss_penalty'], permutation_iterations=param['permutation_iterations'], bootstrap_iterations=param['bootstrap_iterations'])
+                    found_state, _ = env.get_best_state_fast(nalingam_score_iterations)
+
+                    graph = env.get_graph(found_state, iterations=nalingam_graph_iterations)
+
+
+                    path = f'results_real/{folder}/{ablation_method}'
+                    # If folder does not exist, create it
+                    if not os.path.exists(path):
+                        os.makedirs(path)
+                    save_graph_to_json(graph, n_noise, i+1, folder=path)
+                except Exception as e:
+                    print(f"Error running discovery method {ablation_method} with n_noise={n_noise} and iteration={i+1}: {e}")
+                    path = f'results_real/{folder}/{ablation_method}'
+                    save_graph_to_json(None, n_noise, i+1, folder=path)
