@@ -27,4 +27,4 @@ parameter_list = [
 
 ]
 
-test_real_ablation(initial_graph, parameter_list, iterations=20, folder='results_ada_ablation_20_noise_20_iter', dataset_class=AdaByronData, nalingam_score_iterations=10, nalingam_graph_iterations=1)
+test_real_ablation(initial_graph, parameter_list, iterations=5, folder='results_ada_ablation_penalty_20_noise_20_iter', dataset_class=AdaByronData, nalingam_score_iterations=10, nalingam_graph_iterations=1)

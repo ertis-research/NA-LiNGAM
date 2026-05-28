@@ -91,6 +91,8 @@ class SyntheticGraphGenerator:
                             transformed_data = np.cos(data_list[j] * np.pi)
                         elif transformation == 'square':
                             transformed_data = np.power(data_list[j], 2)
+                        elif transformation == 'cube':
+                            transformed_data = np.power(data_list[j], 3)
                         elif transformation == 'tanh':
                             transformed_data = np.tanh(data_list[j])
                         elif transformation == 'abs':
